@@ -99,6 +99,12 @@ class TranslationWorker(Worker):
                                     f"Maximum request size is {self.char_limit} characters.",
                             http_status_code=413)
         else:
+            # TODO some verbose request mode to return detected language
+            response = {}
+
+            if body['src'] is None:
+                src_lang = self._detect_language(sentences)
+                response = {'detected_language': src_lang}
             src_lang = self.languages[body['src']] if body['src'] is not None else self._detect_language(sentences)
             tgt_lang = self.languages[body['tgt']] if body['tgt'] is not None else self.default_language
 
@@ -106,7 +112,8 @@ class TranslationWorker(Worker):
             if delimiters:
                 translations = ''.join(itertools.chain.from_iterable(zip(delimiters, translations))) + delimiters[-1]
 
-            return Response({'result': translations}, mimetype="application/json")
+            response['result'] = translations
+            return Response(response, mimetype="application/json")
 
 
 if __name__ == "__main__":
